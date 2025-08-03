@@ -6,9 +6,10 @@ import type { IdentifyHourVarianceOutput } from "@/ai/flows/identify-hour-varian
 import { useToast } from "@/hooks/use-toast";
 import { FileUploader } from "@/components/file-uploader";
 import { AnalysisDisplay } from "@/components/analysis-display";
+import { EditableAnalysisDisplay } from "@/components/editable-analysis-display";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Edit, Eye } from "lucide-react";
 
 type Step = "upload" | "analyzing" | "results";
 
@@ -20,6 +21,7 @@ export function TimesheetDashboard() {
   } | null>(null);
   const [analysisResult, setAnalysisResult] =
     useState<IdentifyHourVarianceOutput | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
@@ -51,6 +53,15 @@ export function TimesheetDashboard() {
     setStep("upload");
     setFileData(null);
     setAnalysisResult(null);
+    setIsEditMode(false);
+  };
+
+  const handleAnalysisUpdate = (updatedResult: IdentifyHourVarianceOutput) => {
+    setAnalysisResult(updatedResult);
+  };
+
+  const toggleEditMode = () => {
+    setIsEditMode(!isEditMode);
   };
 
   const isLoading = isPending || step === "analyzing";
@@ -91,7 +102,37 @@ export function TimesheetDashboard() {
 
         {step === "results" && analysisResult && (
           <div>
-            <AnalysisDisplay result={analysisResult} />
+            <div className="mb-4 flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Timesheet Analysis</h2>
+              <Button
+                onClick={toggleEditMode}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                {isEditMode ? (
+                  <>
+                    <Eye className="h-4 w-4" />
+                    View Mode
+                  </>
+                ) : (
+                  <>
+                    <Edit className="h-4 w-4" />
+                    Edit Times
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {isEditMode ? (
+              <EditableAnalysisDisplay
+                result={analysisResult}
+                onUpdate={handleAnalysisUpdate}
+              />
+            ) : (
+              <AnalysisDisplay result={analysisResult} />
+            )}
+
             <div className="mt-8 text-center">
               <Button onClick={handleReset} variant="outline" size="lg">
                 Analyze Another Timesheet
